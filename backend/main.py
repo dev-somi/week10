@@ -9,7 +9,7 @@ import tempfile
 import shutil
 import stat
 import oracledb
-import google.generativeai as genai
+from google import genai
 
 
 app = FastAPI()
@@ -48,12 +48,15 @@ async def scan_code(
     else:
         raise HTTPException(status_code=400, detail="입력된 코드나 파일이 없습니다.")
 
-    # [핵심 수정] OS 임시 폴더 대신 현재 폴더에 랜덤한 이름으로 직접 파일을 생성합니다.
-    # 이렇게 하면 Semgrep이 무시하지 않고 100% 정밀 검사합니다.
-    tmp_filename = f"scan_target_{uuid.uuid4().hex}{file_extension}"
-
-    with open(tmp_filename, 'w', encoding='utf-8') as tmp_file:
+    with tempfile.NamedTemporaryFile(
+        mode='w',
+        suffix=file_extension,
+        prefix='scan_target_',
+        delete=False,
+        encoding='utf-8'
+    ) as tmp_file:
         tmp_file.write(code_content)
+        tmp_filename = tmp_file.name
 
     try:
         # 강력한 p/security 룰셋을 적용하여 취약점을 샅샅이 찾아냅니다.
@@ -260,8 +263,7 @@ async def chat(
     fixed_code: str = Form("")
 ):
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        client = genai.Client(api_key=api_key)
 
         prompt = f"""당신은 보안 전문가 AI입니다.
 
@@ -281,7 +283,7 @@ async def chat(
 - 일반론이 아닌 이 코드의 변수명·구조를 짚어 설명
 """
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
         return {"message": response.text}
 
     except Exception as e:
@@ -296,8 +298,7 @@ async def suggest_fix(
     api_key: str = Form(...)
 ):
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        client = genai.Client(api_key=api_key)
 
         prompt = f"""당신은 보안 전문가 코드 리뷰어입니다.
 아래 코드는 다음 취약점이 발견되었습니다:
@@ -321,7 +322,7 @@ async def suggest_fix(
 한줄 요약: (변경 이유)
 """
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
         return {"suggestion": response.text}
 
     except Exception as e:

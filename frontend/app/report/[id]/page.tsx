@@ -13,6 +13,7 @@ export default function IssueDetailPage() {
     const router = useRouter()
     const selectedResult = useScanStore((state) => state.selectedResult)
     const user = useAuthStore((state) => state.user)
+    const scannedCode = useScanStore((state) => state.scannedCode)
     const fixSuggestions = useScanStore((state) => state.fixSuggestions)
     const setFixSuggestion = useScanStore((state) => state.setFixSuggestion)
     const [isGenerating, setIsGenerating] = useState(false)
@@ -32,6 +33,17 @@ export default function IssueDetailPage() {
     const cweCode = cweRaw.split(":")[0].trim()
     const vulnInfo = getVulnerabilityInfo(cweCode)
 
+    const codeDisplay = (() => {
+        if (!scannedCode) return null
+        const allLines = scannedCode.split('\n')
+        const startIdx = Math.max(0, selectedResult.start.line - 4)
+        const endIdx = Math.min(allLines.length - 1, selectedResult.end.line + 1)
+        return { lines: allLines.slice(startIdx, endIdx + 1), firstLineNumber: startIdx + 1 }
+    })()
+    const vulnerableCode = codeDisplay
+        ? codeDisplay.lines.join('\n')
+        : selectedResult.extra.lines?.trim() || ""
+
     // AI 수정안 — fingerprint 없으면 path+line+check_id 폴백
     const fixKey = selectedResult.extra.fingerprint || `${selectedResult.path}-${selectedResult.start.line}-${selectedResult.check_id}`
     const aiSuggestion = fixSuggestions[fixKey]
@@ -41,7 +53,7 @@ export default function IssueDetailPage() {
         setIsGenerating(true)
         try {
             const res = await suggestFix(
-                selectedResult.extra.lines,
+                vulnerableCode,
                 cweCode,
                 selectedResult.extra.message,
                 user.key,
@@ -198,9 +210,26 @@ export default function IssueDetailPage() {
                                         <span>실제 업로드된 취약 코드</span>
                                         <span className="text-[11px] opacity-50 font-mono">BEFORE · Line {selectedResult.start.line}</span>
                                     </div>
-                                    <pre className="p-6 overflow-x-auto text-[14px] font-mono leading-relaxed text-zinc-800 whitespace-pre-wrap">
-                                        {selectedResult.extra.lines?.trim() || "(취약 코드 스니펫이 제공되지 않았습니다)"}
-                                    </pre>
+                                    <div className="p-4 overflow-x-auto font-mono text-[13px] leading-6">
+                                        {codeDisplay ? (
+                                            codeDisplay.lines.map((line, i) => {
+                                                const lineNum = codeDisplay.firstLineNumber + i
+                                                const isVuln = lineNum >= selectedResult.start.line && lineNum <= selectedResult.end.line
+                                                return (
+                                                    <div key={i} className={`flex gap-3 px-3 py-[1px] rounded ${isVuln ? 'bg-red-200/60' : ''}`}>
+                                                        <span className={`select-none w-7 text-right shrink-0 ${isVuln ? 'text-red-500 font-bold' : 'text-zinc-400'}`}>
+                                                            {lineNum}
+                                                        </span>
+                                                        <span className={isVuln ? 'text-red-900 font-semibold' : 'text-zinc-500'}>
+                                                            {line || ' '}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            })
+                                        ) : (
+                                            <div className="px-3 py-2 text-zinc-800 whitespace-pre-wrap">{vulnerableCode}</div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* After: AI 수정안 또는 생성 버튼 */}
@@ -244,7 +273,7 @@ export default function IssueDetailPage() {
             </div>
             <ChatBot
                 context={`${vulnInfo.title}: ${vulnInfo.description}`}
-                vulnerableCode={selectedResult.extra.lines}
+                vulnerableCode={vulnerableCode}
                 fixedCode={aiSuggestion ?? ""}
             />
         </div>

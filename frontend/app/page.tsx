@@ -14,6 +14,7 @@ export default function Home() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const setResults = useScanStore((state) => state.setResults)
+  const setScannedCode = useScanStore((state) => state.setScannedCode)
   const [githubUrl, setGithubUrl] = useState("")
   const [loadingStep, setLoadingStep] = useState(0)
   const [codeText, setCodeText] = useState("")
@@ -23,6 +24,7 @@ export default function Home() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const fileText = await file.text()
     const formData = new FormData()
     formData.append("code_file", file)
 
@@ -36,6 +38,7 @@ export default function Home() {
 
     setTimeout(() => {
       setIsLoading(false)
+      setScannedCode(fileText)
       setResults(res.data)
       router.push("/report")
     }, 500)
@@ -55,6 +58,7 @@ export default function Home() {
 
     setTimeout(() => {
       setIsLoading(false)
+      setScannedCode('')  // GitHub URL 스캔은 로컬 코드 없음
       setResults(res.data)
       router.push("/report")
     }, 500)
@@ -73,6 +77,7 @@ export default function Home() {
 
     setTimeout(() => {
       setIsLoading(false)
+      setScannedCode(codeText)
       setResults(res.data)
       router.push("/report")
     }, 500)

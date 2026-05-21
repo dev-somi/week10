@@ -33,6 +33,8 @@ interface ScanStore {
     setResults: (results: ScanResult[]) => void
     selectedResult: ScanResult | null
     setSelectedResult: (result: ScanResult) => void
+    scannedCode: string
+    setScannedCode: (code: string) => void
     // fingerprint별 Gemini 수정안 캐시
     fixSuggestions: Record<string, string>
     setFixSuggestion: (key: string, suggestion: string) => void
@@ -43,6 +45,8 @@ export const useScanStore = create<ScanStore>((set) => ({
     setResults: (results) => set({ results }),
     selectedResult: null,
     setSelectedResult: (result) => set({ selectedResult: result }),
+    scannedCode: '',
+    setScannedCode: (scannedCode) => set({ scannedCode }),
     fixSuggestions: {},
     setFixSuggestion: (key, suggestion) =>
         set((state) => ({
