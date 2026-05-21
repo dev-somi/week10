@@ -1,69 +1,71 @@
-# SecureVibe 🛡️
+# SecureVibe
 
-**SecureVibe**는 AI 기반의 코드 보안 취약점 점검 및 분석 플랫폼입니다. 사용자가 제출한 코드나 GitHub 레포지토리를 분석하여 보안 취약점을 찾아내고, AI 보안 전문가와의 채팅을 통해 해결 방안을 제시받을 수 있습니다.
+**SecureVibe**는 AI 기반의 코드 보안 취약점 점검 및 분석 플랫폼입니다. 업로드한 코드나 GitHub 레포지토리를 Semgrep으로 정밀 분석하고, Gemini AI를 통해 취약점 설명과 수정 코드를 제안받을 수 있습니다.
 
-## 🚀 주요 기능
+## 주요 기능
 
-- **코드 보안 스캔**:
-  - 파일 업로드 및 코드 직접 입력을 통한 실시간 취약점 분석.
-  - GitHub 레포지토리 URL을 통한 프로젝트 단위 스캔 지원.
-- **Semgrep 기반 진단**: 정밀한 보안 규칙(Rule)을 바탕으로 코드 내 잠재적인 위험 요소 탐지.
-- **AI 보안 전문가 (VibeCheck AI)**:
-  - Google Gemini AI를 활용하여 탐지된 취약점에 대한 상세 설명 및 조치 방법 안내.
-  - 보안 관련 대화형 인터페이스 제공.
-- **사용자 관리**: Oracle Database 연동을 통한 안정적인 회원가입 및 로그인 기능.
-- **Miro 스타일 UI**: 직관적이고 세련된 디자인 시스템을 적용하여 사용자 경험(UX) 극대화.
+- **코드 보안 스캔**: 파일 업로드, 코드 직접 입력, GitHub URL 세 가지 방식 지원
+- **Semgrep 정밀 분석**: `auto` 룰셋 기반으로 CWE·OWASP 분류까지 제공
+- **AI 수정안 제안**: 취약 코드 Before/After 비교 (취약 라인 하이라이트 포함)
+- **AI 채팅**: 탐지된 취약점에 대해 Gemini와 대화형 Q&A
+- **로그인 없이 사용 가능**: 네브바 설정 아이콘에서 Gemini API 키 입력 후 즉시 AI 기능 사용
+- **회원가입/로그인**: Oracle DB 연동 (추후 스캔 결과 기록 용도)
 
-## 🛠 기술 스택
+## 기술 스택
 
 ### Frontend
-- **Framework**: Next.js 15+ (App Router)
-- **Styling**: Tailwind CSS 4, Vanilla CSS
+- **Framework**: Next.js (App Router)
+- **Styling**: Tailwind CSS 4
 - **State Management**: Zustand
-- **Icons**: Lucide React
 - **HTTP Client**: Axios
 
 ### Backend
-- **Framework**: FastAPI (Python 3.10+)
-- **Analysis Tool**: Semgrep
-- **Database**: Oracle Database (oracledb)
-- **AI**: Google Generative AI (Gemini 2.5 Flash)
+- **Framework**: FastAPI (Python)
+- **Analysis**: Semgrep (`auto` 룰셋)
+- **AI**: Google Gemini 2.5 Flash (`google-genai`)
+- **Database**: Oracle Database (`oracledb`)
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
-```text
+```
 .
-├── frontend/          # Next.js 프론트엔드 애플리케이션
-│   ├── app/           # 페이지 및 라우팅
-│   ├── components/    # 재사용 가능한 UI 컴포넌트
-│   ├── services/      # API 통신 로직
-│   └── store/         # 상태 관리 (Zustand)
-└── backend/           # FastAPI 백엔드 서버
-    ├── main.py        # API 엔드포인트 및 핵심 로직
-    └── requirements.txt # 파이썬 의존성 패키지
+├── frontend/
+│   ├── app/            # 페이지 및 라우팅
+│   ├── components/     # Navbar, ChatBot 등 공통 컴포넌트
+│   ├── services/       # API 통신 (scan, chat, suggestFix 등)
+│   └── store/          # Zustand 상태 (auth, scan)
+└── backend/
+    └── main.py         # FastAPI 엔드포인트 (/scan, /chat, /suggest-fix, /login, /signup)
 ```
 
-## ⚙️ 시작하기
+## 시작하기
 
-### 1. Backend 설정
+### 1. Backend
+
 ```bash
 cd backend
-pip install -r requirements.txt
-#google-generativeai 설치
-pip install google-generativeai
-# Semgrep 설치 필수
-pip install semgrep
-# 서버 실행
-uvicorn main:app --reload
+pip install fastapi uvicorn python-multipart oracledb google-genai semgrep
+uvicorn main:app --reload --reload-exclude scan_tmp
 ```
 
-### 2. Frontend 설정
+서버: `http://localhost:8000`
+
+### 2. Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-- 브라우저에서 `http://localhost:3000` 접속
 
-## 📜 라이선스
+브라우저: `http://localhost:3000`
+
+### 3. AI 기능 사용
+
+1. 네브바 우측 상단 설정(기어) 아이콘 클릭
+2. [Google AI Studio](https://aistudio.google.com/app/apikey)에서 발급한 Gemini API 키 입력
+3. 저장 후 AI 수정안 생성 및 채팅 사용 가능 (로그인 불필요)
+
+## 라이선스
+
 이 프로젝트는 캡스톤 디자인 결과물로 제작되었습니다.
