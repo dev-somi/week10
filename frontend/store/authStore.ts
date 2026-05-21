@@ -11,6 +11,8 @@ interface AuthStore {
     user: User | null
     setUser: (user: User) => void
     clearUser: () => void
+    guestApiKey: string
+    setGuestApiKey: (key: string) => void
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -19,6 +21,8 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             setUser: (user) => set({ user }),
             clearUser: () => set({ user: null }),
+            guestApiKey: '',
+            setGuestApiKey: (guestApiKey) => set({ guestApiKey }),
         }),
         {
             name: 'auth-storage',

@@ -13,6 +13,7 @@ export default function IssueDetailPage() {
     const router = useRouter()
     const selectedResult = useScanStore((state) => state.selectedResult)
     const user = useAuthStore((state) => state.user)
+    const apiKey = useAuthStore((state) => state.guestApiKey)
     const scannedCode = useScanStore((state) => state.scannedCode)
     const fixSuggestions = useScanStore((state) => state.fixSuggestions)
     const setFixSuggestion = useScanStore((state) => state.setFixSuggestion)
@@ -49,14 +50,14 @@ export default function IssueDetailPage() {
     const aiSuggestion = fixSuggestions[fixKey]
 
     const handleGenerateFix = async () => {
-        if (!user?.key) return
+        if (!apiKey) return
         setIsGenerating(true)
         try {
             const res = await suggestFix(
                 vulnerableCode,
                 cweCode,
                 selectedResult.extra.message,
-                user.key,
+                apiKey,
             )
             setFixSuggestion(fixKey, res.data.suggestion)
         } finally {
@@ -256,13 +257,13 @@ export default function IssueDetailPage() {
                                     <div className="flex flex-col items-center gap-3 py-6">
                                         <button
                                             onClick={handleGenerateFix}
-                                            disabled={isGenerating || !user?.key}
+                                            disabled={isGenerating || !apiKey}
                                             className="px-8 py-4 bg-miro-blue text-white rounded-full font-bold text-[15px] hover:bg-zinc-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {isGenerating ? "AI가 분석 중..." : "AI 수정안 생성하기"}
                                         </button>
-                                        {!user?.key && (
-                                            <p className="text-[13px] text-slate">로그인이 필요합니다 (API 키)</p>
+                                        {!apiKey && (
+                                            <p className="text-[13px] text-slate">우측 상단 설정에서 OpenRouter API 키를 입력해 주세요</p>
                                         )}
                                     </div>
                                 )}

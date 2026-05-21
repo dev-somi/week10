@@ -17,20 +17,21 @@ interface ChatBotProps {
 
 export default function ChatBot({ context, vulnerableCode = "", fixedCode = "" }: ChatBotProps) {
     const user = useAuthStore((state) => state.user)
+    const apiKey = useAuthStore((state) => state.guestApiKey)
     const [isOpen, setIsOpen] = useState(false)
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState("")
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSend = async () => {
-        if (!input.trim() || !user?.key) return
+        if (!input.trim() || !apiKey) return
 
         const userMessage = input
         setInput("")
         setMessages((prev) => [...prev, { role: "user", content: userMessage }])
 
         setIsLoading(true)
-        const res = await sendMessage(userMessage, user.key, context, vulnerableCode, fixedCode)
+        const res = await sendMessage(userMessage, apiKey, context, vulnerableCode, fixedCode)
         setIsLoading(false)
 
         setMessages((prev) => [...prev, { role: "ai", content: res.data.message }])
@@ -124,7 +125,7 @@ export default function ChatBot({ context, vulnerableCode = "", fixedCode = "" }
                             />
                             <button
                                 onClick={handleSend}
-                                disabled={isLoading || !input.trim()}
+                                disabled={isLoading || !input.trim() || !apiKey}
                                 className="absolute right-1.5 p-2 bg-miro-blue text-white rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-20 active:scale-90"
                             >
                                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
